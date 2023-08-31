@@ -1,5 +1,6 @@
 const Database = require("../database/database");
 class token {
+  
   async accessToken(req, res, next) {
     if (req.headers.authorization == undefined) {
       return res.status(401).json({

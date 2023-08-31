@@ -27,6 +27,8 @@ class sendMessage extends Controller {
       this.sendText(req.body.message, req.body.received, req.body.session_id, res);
     } else if (req.body.message_type === "image") {
       this.sendImage(req.body.message,req.body.file, req.body.received, req.body.session_id, res);
+    } else if (req.body.message_type === "document") {
+      this.sendDocument(req.body.message,req.body.file, req.body.received, req.body.session_id, res);
     } else {
       return res.status(400).json({
         status: false,
@@ -67,8 +69,23 @@ class sendMessage extends Controller {
       console.error("Error sending text:", error);
     }
   };
+
+  sendDocument = async (message,file, received, session_id, res) => {
+    try {
+     whatsapp.sendDocument({
+        sessionId: session_id,
+        to: received,
+        text: message,
+        media: file, // can from URL too
+      });
+      res.status(200).json({
+        status: true,
+        message: "message send to " + received,
+      });
+    } catch (error) {
+      console.error("Error sending text:", error);
+    }
+  };
 }
 
 module.exports = new sendMessage();
-
-
