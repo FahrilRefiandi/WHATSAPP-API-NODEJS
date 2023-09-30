@@ -1,6 +1,9 @@
 const Controller = require("./Controllers");
 const Validator = require("validatorjs");
 const whatsapp = require("velixs-md");
+const fs = require("fs");
+const { default: axios } = require("axios");
+const { log } = require("console");
 
 // const checkSession = require("../helpers/checkSession");
 
@@ -12,6 +15,7 @@ class sendMessage extends Controller {
       received: ["required", "string", "regex:/^62[0-9]{9,12}$/"],
       session_id: "required",
       file: "required_if:message_type,image,audio,video,document",
+      
     };
     const validation = new Validator(req.body, rules);
     if (validation.fails()) {
@@ -26,9 +30,9 @@ class sendMessage extends Controller {
     if (req.body.message_type === "text") {
       this.sendText(req.body.message, req.body.received, req.body.session_id, res);
     } else if (req.body.message_type === "image") {
-      this.sendImage(req.body.message,req.body.file, req.body.received, req.body.session_id, res);
+      this.sendImage(req.body.message, req.body.file, req.body.received, req.body.session_id, res);
     } else if (req.body.message_type === "document") {
-      this.sendDocument(req.body.message,req.body.file, req.body.received, req.body.session_id, res);
+      this.sendDocument(req.body.message, req.body.file, req.body.received, req.body.session_id,req.body.filename, res);
     } else {
       return res.status(400).json({
         status: false,
@@ -46,20 +50,20 @@ class sendMessage extends Controller {
       });
       res.status(200).json({
         status: true,
-        message: "message send to " + received ,
+        message: "message send to " + received,
       });
     } catch (error) {
       console.error("Error sending text:", error);
     }
   };
 
-  sendImage = async (message,file, received, session_id, res) => {
+  sendImage = async (message, file, received, session_id, res) => {
     try {
       whatsapp.sendImage({
         sessionId: session_id,
         to: received,
         text: message,
-        media: file, // can from URL too
+        media: file,
       });
       res.status(200).json({
         status: true,
@@ -70,13 +74,17 @@ class sendMessage extends Controller {
     }
   };
 
-  sendDocument = async (message,file, received, session_id, res) => {
+  sendDocument = async (message, file, received, session_id,filename=file.split("/").pop(), res) => {
     try {
-     whatsapp.sendDocument({
+      let doc = await axios.get(file, {
+        responseType: "arraybuffer",
+      });
+      whatsapp.sendDocument({
         sessionId: session_id,
         to: received,
         text: message,
-        media: file, // can from URL too
+        media: doc.data,
+        filename: filename,
       });
       res.status(200).json({
         status: true,
