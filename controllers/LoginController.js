@@ -1,6 +1,7 @@
 const Controllers = require("./Controllers");
 const whatsapp = require("velixs-md");
 const { toDataURL } = require("qrcode");
+const Validator = require("validatorjs");
 
 const Database = require("../database/database");
 
@@ -29,6 +30,29 @@ class Login extends Controllers{
         res.send(
         await Database.GetAll("SELECT access_token.*,users.name,users.email FROM access_token JOIN users ON access_token.user_id = users.id")
         );
+      }
+
+      async delete(req,res){
+        const rules = {
+          session_id: "required",
+        };
+        const validation = new Validator(req.body, rules);
+        if (validation.fails()) {
+          return res.status(400).json({
+            status: false,
+            message: validation.errors.all(),
+          });
+        }
+        
+        try{
+          await whatsapp.deleteSession(req.body.session_id);
+        }catch(err){
+          return res.status(400).json({
+            status: false,
+            message: err.message,
+          });
+        }
+
       }
     
 }
