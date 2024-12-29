@@ -1,0 +1,6 @@
+{
+    
+    "ignore": ["wa_credentials"],
+    "ext": "js,json",
+    "exec": "nodemon index.js"
+}
